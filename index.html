@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İhsan Turhan – MCDM Tez Veri Değerlendirme</title>
+    <meta name="description" content="İhsan Turhan – FUCOM ve MARCOS yöntemleri ile çok kriterli karar verme tez veri değerlendirme uygulaması">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="url(#logoGrad)"/>
+                        <path d="M8 16L14 10L20 16L14 22Z" fill="white" opacity="0.9"/>
+                        <path d="M14 16L20 10L26 16L20 22Z" fill="white" opacity="0.6"/>
+                        <defs><linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1>İhsan Turhan – MCDM Tez Veri Değerlendirme</h1>
+                    <p class="subtitle">FUCOM & MARCOS Çok Kriterli Karar Verme Analizi</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="btnDataManager" class="btn btn-secondary" title="Veri Yönetimi">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Veri Yönetimi
+                </button>
+                <button id="btnResetAll" class="btn btn-ghost" title="Tüm verileri sıfırla">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    Sıfırla
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <!-- Navigation Tabs -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="setup">
+                <span class="tab-num">1</span> Tanımlar
+            </button>
+            <button class="tab-btn" data-tab="fucom">
+                <span class="tab-num">2</span> FUCOM Girişi
+            </button>
+            <button class="tab-btn" data-tab="marcos">
+                <span class="tab-num">3</span> MARCOS Girişi
+            </button>
+            <button class="tab-btn" data-tab="results">
+                <span class="tab-num">4</span> Sonuçlar
+            </button>
+            <button class="tab-btn" data-tab="theory">
+                <span class="tab-num">5</span> Teori ve Formüller
+            </button>
+            <button class="tab-btn" data-tab="steps">
+                <span class="tab-num">6</span> Adım Adım Çözüm
+            </button>
+        </nav>
+
+        <!-- Tab 1: Setup / Tanımlar -->
+        <section id="tab-setup" class="tab-panel active">
+            <div class="panel-header">
+                <h2>Kriter ve Alternatif Tanımları</h2>
+                <p>Kriterlerin ve alternatiflerin isimlerini ve özelliklerini belirleyin.</p>
+            </div>
+
+            <div class="card">
+                <h3>Uzman İsimleri <span class="badge">6 Uzman</span></h3>
+                <div class="grid-3" id="expertNames">
+                    <!-- JS ile doldurulacak -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Kriterler <span class="badge">9 Kriter</span></h3>
+                <p class="card-desc">Her kriter için isim ve tipini (fayda/maliyet) belirleyin.</p>
+                <div class="criteria-list" id="criteriaList">
+                    <!-- JS ile doldurulacak -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Alternatifler <span class="badge">9 Alternatif</span></h3>
+                <div class="grid-3" id="alternativeNames">
+                    <!-- JS ile doldurulacak -->
+                </div>
+            </div>
+
+            <div class="panel-actions">
+                <button class="btn btn-primary" id="btnSaveSetup">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+                    Kaydet ve Devam Et
+                </button>
+            </div>
+        </section>
+
+        <!-- Tab 2: FUCOM Input -->
+        <section id="tab-fucom" class="tab-panel">
+            <div class="panel-header">
+                <h2>FUCOM – Kriter Ağırlıklandırma</h2>
+                <p>Her uzman için kriterleri önem sırasına göre sıralayın ve ardışık karşılaştırma değerlerini girin.</p>
+            </div>
+
+            <div class="expert-tabs" id="fucomExpertTabs">
+                <!-- JS ile doldurulacak -->
+            </div>
+
+            <div id="fucomExpertPanels">
+                <!-- JS ile doldurulacak -->
+            </div>
+
+            <div class="panel-actions">
+                <button class="btn btn-secondary" id="btnBackToSetup">← Geri</button>
+                <button class="btn btn-primary" id="btnSaveFucom">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+                    Kaydet ve Devam Et
+                </button>
+            </div>
+        </section>
+
+        <!-- Tab 3: MARCOS Input -->
+        <section id="tab-marcos" class="tab-panel">
+            <div class="panel-header">
+                <h2>MARCOS – Karar Matrisi Girişi</h2>
+                <p>Her uzman için alternatiflerin kriterlere göre değerlendirmelerini girin.</p>
+            </div>
+
+            <div class="expert-tabs" id="marcosExpertTabs">
+                <!-- JS ile doldurulacak -->
+            </div>
+
+            <div id="marcosExpertPanels">
+                <!-- JS ile doldurulacak -->
+            </div>
+
+            <div class="panel-actions">
+                <button class="btn btn-secondary" id="btnBackToFucom">← Geri</button>
+                <button class="btn btn-primary" id="btnCalculate">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg>
+                    Hesapla ve Sonuçları Göster
+                </button>
+            </div>
+        </section>
+
+        <!-- Tab 4: Results -->
+        <section id="tab-results" class="tab-panel">
+            <div class="panel-header">
+                <h2>Analiz Sonuçları</h2>
+                <p>FUCOM ile belirlenen kriter ağırlıkları ve MARCOS ile yapılan alternatif sıralaması.</p>
+            </div>
+
+            <!-- FUCOM Results -->
+            <div class="card">
+                <h3>FUCOM – Kriter Ağırlıkları</h3>
+                <div class="result-grid">
+                    <div class="table-container">
+                        <h4>Her Uzmanın Kriter Ağırlıkları</h4>
+                        <div class="table-scroll" id="fucomWeightsTable"></div>
+                    </div>
+                    <div class="table-container">
+                        <h4>Birleştirilmiş (Ortalama) Ağırlıklar</h4>
+                        <div class="table-scroll" id="fucomFinalWeightsTable"></div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartFucomWeights"></canvas>
+                </div>
+                <div class="table-container">
+                    <h4>Tam Tutarlılıktan Sapma (DFC — Deviation from Full Consistency)</h4>
+                    <p class="card-desc">DFC &lt; 0.01 → Kabul edilebilir tutarlılık düzeyi</p>
+                    <div class="table-scroll" id="dfcTable"></div>
+                </div>
+            </div>
+
+            <!-- MARCOS Results -->
+            <div class="card">
+                <h3>MARCOS – Alternatif Sıralaması</h3>
+
+                <div class="table-container">
+                    <h4>Birleştirilmiş Karar Matrisi (Ortalama)</h4>
+                    <div class="table-scroll" id="marcosDecisionMatrix"></div>
+                </div>
+
+                <div class="table-container">
+                    <h4>Normalize Edilmiş Matris</h4>
+                    <div class="table-scroll" id="marcosNormalizedMatrix"></div>
+                </div>
+
+                <div class="table-container">
+                    <h4>Ağırlıklı Normalize Matris</h4>
+                    <div class="table-scroll" id="marcosWeightedMatrix"></div>
+                </div>
+
+                <div class="result-grid">
+                    <div class="table-container">
+                        <h4>Si, Ki+, Ki−, fi(Ki+), fi(Ki−), fi Değerleri ve Sıralama</h4>
+                        <div class="table-scroll" id="marcosResultTable"></div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="chartMarcosRanking"></canvas>
+                </div>
+            </div>
+
+            <div class="panel-actions">
+                <button class="btn btn-secondary" id="btnBackToMarcos">← Geri</button>
+                <button class="btn btn-accent" id="btnExportResults" disabled style="background:linear-gradient(135deg,#217346,#2e9e5e)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    Sonuçları Excel'e Aktar
+                </button>
+                <button class="btn btn-accent" id="btnPrint">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Yazdır / PDF
+                </button>
+            </div>
+        </section>
+
+        <!-- Tab 5: Theory -->
+        <section id="tab-theory" class="tab-panel">
+            <div class="panel-header">
+                <h2>Teori ve Formüller</h2>
+                <p>Uygulamada arka planda çalışan FUCOM ve MARCOS algoritmalarının matematiksel altyapısı ve adım adım hesaplama prosedürleri.</p>
+            </div>
+
+            <!-- FUCOM Theory -->
+            <div class="card">
+                <h3>FUCOM (Full Consistency Method - Tam Tutarlılık Yöntemi)</h3>
+                <p class="card-desc" style="margin-bottom: 1.5rem;">Pamučar vd. (2018) tarafından geliştirilen yöntem, kriter ağırlıklarının belirlenmesinde karar vericilerin öznelliğini azaltmayı ve hata payını minimuma indirmeyi hedefler.</p>
+                
+                <div class="theory-step" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border-color);">
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Adım 1: Kriterlerin Sıralanması</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Uzmanlar, n adet kriteri önem derecesine göre en önemliden (1) en aza doğru sıralar.</p>
+                    <div style="background: var(--bg-input); padding: 0.75rem; border-radius: var(--radius-sm); margin-top: 0.5rem; font-family: monospace; font-size: 0.9rem;">
+                        <span style="color: var(--accent-primary);">C<sub>j(1)</sub> > C<sub>j(2)</sub> > ... > C<sub>j(n)</sub></span>
+                    </div>
+                </div>
+
+                <div class="theory-step" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border-color);">
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Adım 2: Karşılaştırmalı Önceliklerin Belirlenmesi (&Phi;)</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Sıralamadaki her bir kriter, kendinden bir sonraki kriter ile karşılaştırılır ve ardışık öncelik değeri (&Phi;) atanır. (Genellikle 1-9 arası ölçek kullanılır).</p>
+                    <div style="background: var(--bg-input); padding: 0.75rem; border-radius: var(--radius-sm); margin-top: 0.5rem; font-family: monospace; font-size: 0.9rem;">
+                        <span style="color: var(--accent-primary);">&Phi;<sub>k / (k+1)</sub> = w<sub>k</sub> / w<sub>k+1</sub></span>
+                    </div>
+                </div>
+
+                <div class="theory-step" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border-color);">
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Adım 3: Ağırlık Katsayılarının Kaplanması (w)</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Kriter ağırlıkları (w<sub>j</sub>) aşağıdaki kısıtları sağlayacak şekilde lineer olmayan optimizasyon veya kapalı form denklemler ile çözülür:</p>
+                    <ul style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Koşul 1 (Ardışık): <span style="font-family: monospace;">w<sub>k</sub> / w<sub>k+1</sub> = &Phi;<sub>k / (k+1)</sub></span></li>
+                        <li>Koşul 2 (Geçişlilik): <span style="font-family: monospace;">w<sub>k</sub> / w<sub>k+2</sub> = &Phi;<sub>k / (k+1)</sub> &times; &Phi;<sub>(k+1) / (k+2)</sub></span></li>
+                        <li>Koşul 3 (Toplam): <span style="font-family: monospace;">&sum; w<sub>j</sub> = 1</span></li>
+                    </ul>
+                </div>
+
+                <div class="theory-step">
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Adım 4: Tam Tutarlılıktan Sapma (DFC veya &chi;)</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">DFC, uzmanların değerlendirmelerindeki hataları ve kendi içindeki tutarsızlığı (sapmayı) ifade eder. &chi; değeri sıfıra ne kadar yakınsa (genellikle &chi; < 0.025 hedeflenir), hesaplanan ağırlıklar o kadar güvenilir ve tutarlıdır.</p>
+                </div>
+            </div>
+
+            <!-- MARCOS Theory -->
+            <div class="card">
+                <h3>MARCOS (Measurement Alternatives and Ranking according to COmpromise Solution)</h3>
+                <p class="card-desc" style="margin-bottom: 1.5rem;">Stević vd. (2020) tarafından geliştirilen MARCOS, alternatiflerin hem ideal hem de anti-ideal çözümlere olan fayda fonksiyonlarına göre uzlaşık bir sıralama oluşturur.</p>
+
+                <div class="theory-step" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border-color);">
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Adım 1 ve 2: Başlangıç Karar ve Genişletilmiş Matris</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Genişletilmiş karar matrisi, Anti-İdeal (AAI) ve İdeal (AI) çözümleri içerir.</p>
+                    <div style="background: var(--bg-input); padding: 0.75rem; border-radius: var(--radius-sm); margin-top: 0.5rem; font-size: 0.9rem;">
+                        <strong>Fayda (Benefit) Kriterleri:</strong> <span style="font-family: monospace; color: var(--accent-primary);">AI = max(x<sub>ij</sub>), AAI = min(x<sub>ij</sub>)</span><br>
+                        <strong>Maliyet (Cost) Kriterleri:</strong> <span style="font-family: monospace; color: var(--danger);">AI = min(x<sub>ij</sub>), AAI = max(x<sub>ij</sub>)</span>
+                    </div>
+                </div>
+
+                <div class="theory-step" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border-color);">
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Adım 3: Matris Normalizasyonu (n<sub>ij</sub>)</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Kriter türüne göre lineer normalizasyon uygulanır:</p>
+                    <ul style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Fayda Kriterleri: <span style="font-family: monospace;">n<sub>ij</sub> = x<sub>ij</sub> / x<sub>AI</sub></span></li>
+                        <li>Maliyet Kriterleri: <span style="font-family: monospace;">n<sub>ij</sub> = x<sub>AAI</sub> / x<sub>ij</sub></span></li>
+                    </ul>
+                </div>
+
+                <div class="theory-step" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px dashed var(--border-color);">
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Adım 4 ve 5: Ağırlıklandırma ve Fayda Dereceleri (K<sup>-</sup>, K<sup>+</sup>)</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Normalize matris FUCOM ağırlıkları ile çarpılır (<span style="font-family: monospace;">v<sub>ij</sub> = n<sub>ij</sub> &times; w<sub>j</sub></span>) ve her satır toplanır (<span style="font-family: monospace;">S<sub>i</sub> = &sum; v<sub>ij</sub></span>). Ardından referans noktalarına göre fayda dereceleri bulunur:</p>
+                    <ul style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 1.5rem; margin-top: 0.5rem;">
+                        <li>Anti-İdeal çözüme göre fayda: <span style="font-family: monospace;">K<sub>i</sub><sup>-</sup> = S<sub>i</sub> / S<sub>AAI</sub></span></li>
+                        <li>İdeal çözüme göre fayda: <span style="font-family: monospace;">K<sub>i</sub><sup>+</sup> = S<sub>i</sub> / S<sub>AI</sub></span></li>
+                    </ul>
+                </div>
+
+                <div class="theory-step">
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Adım 6: Fayda Fonksiyonu f(K) ve Sıralama</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Uzlaşık çözümün temelini oluşturan nihai fayda fonksiyonu formülü:</p>
+                    <div style="background: var(--bg-input); padding: 0.75rem; border-radius: var(--radius-sm); margin-top: 0.5rem; font-family: monospace; font-size: 0.9rem;">
+                        f(K<sub>i</sub>) = (K<sub>i</sub><sup>+</sup> + K<sub>i</sub><sup>-</sup>) / (1 + (1 - f(K<sub>i</sub><sup>+</sup>)) / f(K<sub>i</sub><sup>+</sup>) + (1 - f(K<sub>i</sub><sup>-</sup>)) / f(K<sub>i</sub><sup>-</sup>))<br><br>
+                        <em>Yardımcı Fonksiyonlar:</em><br>
+                        f(K<sub>i</sub><sup>-</sup>) = K<sub>i</sub><sup>+</sup> / (K<sub>i</sub><sup>+</sup> + K<sub>i</sub><sup>-</sup>)<br>
+                        f(K<sub>i</sub><sup>+</sup>) = K<sub>i</sub><sup>-</sup> / (K<sub>i</sub><sup>+</sup> + K<sub>i</sub><sup>-</sup>)
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.75rem;">Alternatifler, en yüksek f(K<sub>i</sub>) değerine sahip olandan en düşüğe doğru (A1, A2...) sıralanarak nihai karar verilir.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 6: Calculation Steps -->
+        <section id="tab-steps" class="tab-panel">
+            <div class="panel-header">
+                <h2>Adım Adım Hesaplama Raporu</h2>
+                <p style="margin-bottom: 1rem;">Girilen verilere (uzmanlar, kriterler, matrisler) dayalı olarak arka planda gerçekleşen matematiksel işlemler.</p>
+                <div class="panel-actions" style="margin-top: 0; padding-top: 0; border: none; justify-content: flex-start;">
+                    <button class="btn btn-primary" id="btnRefreshSteps">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        Raporu Yenile / Oluştur
+                    </button>
+                    <button class="btn btn-accent" id="btnExportStepsExcel" style="background:linear-gradient(135deg,#217346,#2e9e5e)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Raporu Excel'e Aktar
+                    </button>
+                    <button class="btn btn-accent" id="btnExportStepsPDF" style="background:linear-gradient(135deg,#c0392b,#e74c3c)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+                        PDF Olarak İndir
+                    </button>
+                </div>
+            </div>
+            
+            <div id="stepsContainer" style="margin-top: 2rem;">
+                <div class="card" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                    Raporu görmek için önce "Hesapla ve Sonuçları Göster" adımını tamamlayın veya yukarıdaki "Raporu Yenile" butonuna tıklayın.
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Data Manager Modal -->
+    <div id="dataManagerModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Veri Yönetimi</h2>
+                <button class="modal-close" id="btnCloseModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Save Section -->
+                <div class="dm-section">
+                    <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+                        Mevcut Veriyi Kaydet
+                    </h4>
+                    <div class="dm-save-row">
+                        <input type="text" id="dmSaveName" placeholder="Kayıt adı girin (ör: Senaryo 1)">
+                        <button class="btn btn-primary" id="btnDmSave">Kaydet</button>
+                    </div>
+                </div>
+
+                <!-- Saved List Section -->
+                <div class="dm-section">
+                    <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        Kayıtlı Veriler
+                    </h4>
+                    <div id="dmSavedList" class="dm-saved-list">
+                        <p class="dm-empty">Henüz kayıtlı veri bulunmuyor.</p>
+                    </div>
+                </div>
+
+                <!-- Import/Export Section -->
+                <div class="dm-section">
+                    <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                        Dosya İçe/Dışa Aktar
+                    </h4>
+                    <div class="dm-export-row">
+                        <button class="btn btn-accent" id="btnDmExport">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            JSON Dışa Aktar
+                        </button>
+                        <button class="btn btn-secondary" id="btnDmImport">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            JSON İçe Aktar
+                        </button>
+                        <input type="file" id="dmFileInput" accept=".json" style="display:none">
+                    </div>
+                    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
+                    <h4>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                        Excel İçe/Dışa Aktar (Tüm Veriler)
+                    </h4>
+                    <div class="dm-export-row">
+                        <button class="btn btn-accent" id="btnDmExcelExport" style="background:linear-gradient(135deg,#217346,#2e9e5e)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Excel Dışa Aktar (.xlsx)
+                        </button>
+                        <button class="btn btn-secondary" id="btnDmExcelImport">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Excel İçe Aktar (.xlsx)
+                        </button>
+                        <input type="file" id="dmExcelFileInput" accept=".xlsx,.xls" style="display:none">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <footer class="app-footer">
+        <p>© 2026 – İhsan Turhan | MCDM Tez Veri Değerlendirme | FUCOM & MARCOS</p>
+    </footer>
+
+    <!-- Privacy Info Modal -->
+    <div id="privacyModal" class="modal-overlay">
+        <div class="modal" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2>Gizlilik ve Veri Güvenliği Bildirimi</h2>
+                <button class="modal-close" id="btnClosePrivacy">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex; gap: 1.25rem; align-items:flex-start;">
+                    <div style="color: var(--success); background: rgba(22, 163, 74, 0.1); padding: 0.8rem; border-radius: var(--radius-md); flex-shrink: 0;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+                    </div>
+                    <div>
+                        <p style="margin-bottom: 0.75rem; color: var(--text-primary); font-weight: 500; font-size: 0.95rem;">
+                            Bu uygulama tamamen tarayıcınız (istemci) üzerinde çalışmaktadır.
+                        </p>
+                        <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6;">
+                            Girmiş olduğunuz uzman isimleri, kriterler, alternatifler ve karar matrisleri de dahil olmak üzere <strong>hiçbir veri herhangi bir arka uç (backend) sunucusuna aktarılmaz ve kaydedilmez.</strong>
+                            Tüm işlemler ve veriler yalnızca sizin bilgisayarınızda (tarayıcı belleğinizde) tutulur, bu sayede akademik değerlendirme verilerinizin gizliliği ve mahremiyeti garanti altına alınır.
+                        </p>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                    <button class="btn btn-primary" id="btnAcknowledgePrivacy">Anladım, Uygulamaya Geç</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Back to Top Button -->
+    <button id="btnScrollToTop" class="btn-scroll-top" title="Başa Dön">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fucom.js"></script>
+    <script src="js/marcos.js"></script>
+    <script src="js/visualization.js"></script>
+    <script src="js/datamanager.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
