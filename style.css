@@ -1352,6 +1352,16 @@ select {
     .result-table th { background: #f0f0f0; color: #333; }
     .result-table td { color: #111; }
     .chart-container { height: 300px; box-shadow: none; }
+
+    /* --- YENİ EKLENEN YAZDIRMA KURALLARI --- */
+    .collapsible-body {
+        max-height: none !important;
+        overflow: visible !important;
+        display: block !important;
+    }
+    .collapsible-header .coll-toggle {
+        display: none !important;
+    }
 }
 
 /* =============================================
