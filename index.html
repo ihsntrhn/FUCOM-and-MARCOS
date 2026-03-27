@@ -64,6 +64,11 @@
             <button class="tab-btn" data-tab="steps">
                 <span class="tab-num">6</span> Adım Adım Çözüm
             </button>
+
+<button class="tab-btn" data-tab="sensitivity">
+    <span class="tab-num">7</span> Duyarlılık Analizi
+</button>
+
         </nav>
 
         <!-- Tab 1: Setup / Tanımlar -->
@@ -179,6 +184,10 @@
                     <p class="card-desc">DFC &lt; 0.01 → Kabul edilebilir tutarlılık düzeyi</p>
                     <div class="table-scroll" id="dfcTable"></div>
                 </div>
+
+<div class="chart-container" style="height: 280px; margin-top: 1rem;">
+                    <canvas id="chartFucomDFC"></canvas>
+                </div>
             </div>
 
             <!-- MARCOS Results -->
@@ -205,6 +214,10 @@
                         <h4>Si, Ki+, Ki−, fi(Ki+), fi(Ki−), fi Değerleri ve Sıralama</h4>
                         <div class="table-scroll" id="marcosResultTable"></div>
                     </div>
+                </div>
+
+<div class="chart-container" style="height: 320px; margin-top: 1rem;">
+                    <canvas id="chartMarcosUtility"></canvas>
                 </div>
 
                 <div class="chart-container">
@@ -342,6 +355,35 @@
                 </div>
             </div>
         </section>
+<section id="tab-sensitivity" class="tab-panel">
+    <div class="panel-header">
+        <h2>Duyarlılık Analizi</h2>
+        <p>Kriter ağırlıklarındaki değişimlerin nihai sıralama üzerindeki etkisini test edin.</p>
+    </div>
+
+    <div class="card">
+        <h3>Analiz Ayarları</h3>
+        <p class="card-desc">Hangi kriterin duyarlılığını test etmek istediğinizi seçin.</p>
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Test Edilecek Kriter:</label>
+                <select id="selectSensitivityCriteria" class="form-control"></select>
+            </div>
+            <div class="form-group" style="display:flex; align-items:flex-end;">
+                <button class="btn btn-primary" id="btnRunSensitivity">Analizi Çalıştır ve PDF Raporu Al</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sensitivityResultsContainer" class="card" style="display:none;">
+        <h3>Simülasyon Sonuçları</h3>
+        <div class="table-container">
+            <div class="table-scroll" id="sensitivityTable"></div>
+        </div>
+    </div>
+</section>
+
+
     </main>
 
     <!-- Data Manager Modal -->
@@ -457,6 +499,9 @@
     <script src="js/storage.js"></script>
     <script src="js/fucom.js"></script>
     <script src="js/marcos.js"></script>
+
+<script src="js/sensitivity.js"></script>
+
     <script src="js/visualization.js"></script>
     <script src="js/datamanager.js"></script>
     <script src="js/app.js"></script>
