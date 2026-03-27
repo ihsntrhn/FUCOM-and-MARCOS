@@ -339,9 +339,13 @@
         renderMarcosWeightedMatrix(marcosResult.weightedMatrix, criteriaNames, altNames);
         renderMarcosResultTable(marcosResult, altNames);
 
-        // Grafikleri oluştur
+// Grafikleri oluştur
         Visualization.renderFucomChart(criteriaNames, fucomResult.finalWeights, fucomResult.expertWeights);
         Visualization.renderMarcosChart(altNames, marcosResult.fK, marcosResult.ranks);
+        
+        // --- YENİ EKLENEN GRAFİKLER ---
+        Visualization.renderDFCChart(appData.experts, fucomResult.dfcValues);
+        Visualization.renderMarcosUtilityChart(altNames, marcosResult.kPlus, marcosResult.kMinus);
 
         // Adım Adım Rapor Sayfasını (Tab 6) Render et
         renderCalculationSteps(fucomResult, marcosResult, combinedMatrix, altNames, criteriaNames, criteriaTypes);
@@ -684,6 +688,9 @@
         // ╔══════════════════════════════════════════════════════════╗
         // ║  BÖLÜM 2: MARCOS HESAPLAMA ADIMLARI                    ║
         // ╚══════════════════════════════════════════════════════════╝
+       // ╔══════════════════════════════════════════════════════════╗
+        // ║  BÖLÜM 2: MARCOS HESAPLAMA ADIMLARI                    ║
+        // ╚══════════════════════════════════════════════════════════╝
         html += `<div class="step-section" id="sec-marcos">`;
         html += `<div class="step-section-header">
             <span class="step-number">2</span>
@@ -692,10 +699,58 @@
         </div>`;
         html += `<div class="step-section-body">`;
 
-        // ── Adım 1: Birleştirilmiş Karar Matrisi ──
+        // ── YENİ EKLENEN: Adım 0: Bireysel Uzman Matrisleri ──
+        html += `<div class="step-card">
+            <div class="step-card-title"><span class="step-mini-num">0</span> Uzmanların Bireysel Karar Matrisleri</div>`;
+        html += `<div class="note-box"><span class="note-icon">ℹ</span><span>Her uzmanın sisteme girdiği ham karar matrisleri. Ortalamaları alınmadan önceki halleridir. Başlıklara tıklayarak açabilirsiniz.</span></div>`;
+        
+        appData.marcos.forEach((matrix, eIdx) => {
+            html += `<div class="collapsible-header collapsed"><h4>${esc(appData.experts[eIdx])} Matrisi</h4><span class="coll-toggle">▼</span></div>`;
+            html += `<div class="collapsible-body collapsed">`;
+            html += `<div class="table-scroll"><table class="result-table"><thead><tr><th>Alternatif</th>`;
+            criteriaNames.forEach(cn => { html += `<th>${esc(cn)}</th>`; });
+            html += `</tr></thead><tbody>`;
+            matrix.forEach((row, aIdx) => {
+                html += `<tr><td>${esc(altNames[aIdx])}</td>`;
+                row.forEach(val => { html += `<td>${val.toFixed(2)}</td>`; });
+                html += `</tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+        });
+        html += `</div>`;
+
+// ── Adım 1: Birleştirilmiş Karar Matrisi ──
         html += `<div class="step-card">
             <div class="step-card-title"><span class="step-mini-num">1</span> Birleştirilmiş Karar Matrisi (Uzman Ortalaması)</div>`;
         html += `<div class="note-box"><span class="note-icon">ℹ</span><span>Her hücre, tüm uzmanların o hücre için verdiği değerlerin aritmetik ortalamasıdır: x̄<sub>ij</sub> = (1/E) × Σ x<sub>ij</sub><sup>(e)</sup></span></div>`;
+
+        // --- YENİ EKLENEN: Satır Satır Aritmetik Ortalama Hesaplama Dökümü ---
+        html += `<div class="collapsible-header collapsed" style="background: var(--bg-primary); border-color: rgba(79,70,229,0.2);">
+                    <h4 style="color: var(--accent-primary);">Aritmetik Ortalama Hesaplama Dökümü (Tüm Hücreler)</h4>
+                    <span class="coll-toggle">▼</span>
+                 </div>`;
+        html += `<div class="collapsible-body collapsed" style="max-height: 350px; overflow-y: auto; background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 15px; border: 1px solid var(--border-color); font-size: 0.85rem;">`;
+        
+        altNames.forEach((alt, i) => {
+            html += `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color);">
+                        <strong style="color: var(--text-primary); display:block; margin-bottom:4px;">${esc(alt)} İçin Hücre Değerleri:</strong>`;
+            criteriaNames.forEach((cn, j) => {
+                // Tüm uzmanların (i, j) hücresindeki değerlerini al
+                const vals = appData.marcos.map(expertMatrix => expertMatrix[i][j]);
+                const valStrings = vals.map(v => v.toFixed(2)).join(' + ');
+                const avg = combinedMatrix[i][j];
+                const numOfExperts = vals.length;
+                
+                html += `<div style="font-family: 'Courier New', Consolas, monospace; color: var(--text-secondary); margin-left: 8px; margin-top: 2px;">
+                            <span style="color:var(--text-muted); display:inline-block; width: 100px;">${esc(cn)}:</span> 
+                            x̄<sub>${i+1},${j+1}</sub> = (${valStrings}) / ${numOfExperts} = <strong style="color: var(--accent-primary);">${avg.toFixed(4)}</strong>
+                         </div>`;
+            });
+            html += `</div>`;
+        });
+        html += `</div>`;
+        // --- Döküm Sonu ---
+
         html += `<div class="table-scroll"><table class="result-table"><thead><tr><th>Alternatif</th>`;
         criteriaNames.forEach(cn => { html += `<th>${esc(cn)}</th>`; });
         html += `</tr></thead><tbody>`;
@@ -716,7 +771,7 @@
             const colVals = combinedMatrix.map(row => row[j]);
             const type = criteriaTypes[j] === 'benefit' ? 'Fayda ↑' : 'Maliyet ↓';
             html += `<strong>${esc(cn)}</strong> (${type}): değerler=[${colVals.map(v => v.toFixed(2)).join(', ')}]<br>`;
-            html += `  → AI = ${marcosResult.ai[j].toFixed(4)}, AAI = ${marcosResult.aai[j].toFixed(4)}<br>`;
+            html += `  → AI = <strong>${marcosResult.ai[j].toFixed(4)}</strong>, AAI = <strong>${marcosResult.aai[j].toFixed(4)}</strong><br>`;
         });
         html += `</div>`;
 
@@ -724,7 +779,7 @@
         html += `<div class="table-scroll"><table class="result-table"><thead><tr><th>Satır</th>`;
         criteriaNames.forEach(cn => { html += `<th>${esc(cn)}</th>`; });
         html += `</tr></thead><tbody>`;
-        html += `<tr style="background:rgba(220,38,38,0.04)"><td style="font-weight:600;color:var(--danger)">AAI</td>`;
+        html += `<tr style="background:rgba(220,38,38,0.04)"><td style="font-weight:600;color:var(--danger)">AAI (Anti-İdeal)</td>`;
         marcosResult.aai.forEach(val => { html += `<td>${val.toFixed(4)}</td>`; });
         html += `</tr>`;
         combinedMatrix.forEach((row, i) => {
@@ -732,17 +787,54 @@
             row.forEach(val => { html += `<td>${val.toFixed(4)}</td>`; });
             html += `</tr>`;
         });
-        html += `<tr style="background:rgba(22,163,74,0.04)"><td style="font-weight:600;color:var(--success)">AI</td>`;
+        html += `<tr style="background:rgba(22,163,74,0.04)"><td style="font-weight:600;color:var(--success)">AI (İdeal)</td>`;
         marcosResult.ai.forEach(val => { html += `<td>${val.toFixed(4)}</td>`; });
         html += `</tr></tbody></table></div></div>`;
 
-        // ── Adım 3: Normalizasyon ──
+ 
+// ── Adım 3: Matris Normalizasyonu ──
         html += `<div class="step-card">
             <div class="step-card-title"><span class="step-mini-num">3</span> Matris Normalizasyonu</div>`;
         html += `<div class="formula-block">`;
         html += `<strong>Fayda Kriterleri:</strong> n<sub>ij</sub> = x<sub>ij</sub> / AI<sub>j</sub><br>`;
         html += `<strong>Maliyet Kriterleri:</strong> n<sub>ij</sub> = AI<sub>j</sub> / x<sub>ij</sub>`;
         html += `</div>`;
+
+        // --- YENİ EKLENEN: Satır Satır Normalizasyon Hesaplama Dökümü ---
+        html += `<div class="collapsible-header collapsed" style="background: var(--bg-primary); border-color: rgba(79,70,229,0.2);">
+                    <h4 style="color: var(--accent-primary);">Normalizasyon Hesaplama Dökümü (Tüm Hücreler)</h4>
+                    <span class="coll-toggle">▼</span>
+                 </div>`;
+        html += `<div class="collapsible-body collapsed" style="max-height: 350px; overflow-y: auto; background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 15px; border: 1px solid var(--border-color); font-size: 0.85rem;">`;
+        
+        altNames.forEach((alt, i) => {
+            html += `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color);">
+                        <strong style="color: var(--text-primary); display:block; margin-bottom:4px;">${esc(alt)} Normalizasyon Değerleri:</strong>`;
+            criteriaNames.forEach((cn, j) => {
+                const x_ij = combinedMatrix[i][j];
+                const ai_j = marcosResult.ai[j];
+                const n_ij = marcosResult.normalizedMatrix[i][j];
+                const type = criteriaTypes[j];
+                const typeText = type === 'benefit' ? 'Fayda' : 'Maliyet';
+                
+                html += `<div style="font-family: 'Courier New', Consolas, monospace; color: var(--text-secondary); margin-left: 8px; margin-top: 2px;">
+                            <span style="color:var(--text-muted); display:inline-block; width: 120px;">${esc(cn)} (${typeText}):</span> `;
+                
+                if (type === 'benefit') {
+                    // Fayda formülü: x_ij / AI_j
+                    html += `n<sub>${i+1},${j+1}</sub> = ${x_ij.toFixed(4)} / ${ai_j.toFixed(4)} = <strong style="color: var(--accent-primary);">${n_ij.toFixed(4)}</strong>`;
+                } else {
+                    // Maliyet formülü: AI_j / x_ij
+                    html += `n<sub>${i+1},${j+1}</sub> = ${ai_j.toFixed(4)} / ${x_ij.toFixed(4)} = <strong style="color: var(--accent-primary);">${n_ij.toFixed(4)}</strong>`;
+                }
+                
+                html += `</div>`;
+            });
+            html += `</div>`;
+        });
+        html += `</div>`;
+        // --- Döküm Sonu ---
+
         html += `<div class="table-scroll"><table class="result-table"><thead><tr><th>Alternatif</th>`;
         criteriaNames.forEach(cn => { html += `<th>${esc(cn)}</th>`; });
         html += `</tr></thead><tbody>`;
@@ -753,12 +845,42 @@
         });
         html += `</tbody></table></div></div>`;
 
-        // ── Adım 4: Ağırlıklı Normalize Matris ──
+
+
+
+
+// ── Adım 4: Ağırlıklı Normalize Matris ──
         html += `<div class="step-card">
             <div class="step-card-title"><span class="step-mini-num">4</span> Ağırlıklı Normalize Matris</div>`;
         html += `<div class="formula-block">v<sub>ij</sub> = n<sub>ij</sub> × w<sub>j</sub></div>`;
+
+        // --- YENİ EKLENEN: Satır Satır Ağırlıklandırma Hesaplama Dökümü ---
+        html += `<div class="collapsible-header collapsed" style="background: var(--bg-primary); border-color: rgba(79,70,229,0.2);">
+                    <h4 style="color: var(--accent-primary);">Ağırlıklandırma Hesaplama Dökümü (Tüm Hücreler)</h4>
+                    <span class="coll-toggle">▼</span>
+                 </div>`;
+        html += `<div class="collapsible-body collapsed" style="max-height: 350px; overflow-y: auto; background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 15px; border: 1px solid var(--border-color); font-size: 0.85rem;">`;
+
+        altNames.forEach((alt, i) => {
+            html += `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color);">
+                        <strong style="color: var(--text-primary); display:block; margin-bottom:4px;">${esc(alt)} Ağırlıklandırılmış Değerleri:</strong>`;
+            criteriaNames.forEach((cn, j) => {
+                const n_ij = marcosResult.normalizedMatrix[i][j];
+                const w_j = fucomResult.finalWeights[j];
+                const v_ij = marcosResult.weightedMatrix[i][j];
+
+                html += `<div style="font-family: 'Courier New', Consolas, monospace; color: var(--text-secondary); margin-left: 8px; margin-top: 2px;">
+                            <span style="color:var(--text-muted); display:inline-block; width: 120px;">${esc(cn)}:</span> 
+                            v<sub>${i+1},${j+1}</sub> = ${n_ij.toFixed(4)} × ${w_j.toFixed(4)} = <strong style="color: var(--accent-primary);">${v_ij.toFixed(4)}</strong>
+                         </div>`;
+            });
+            html += `</div>`;
+        });
+        html += `</div>`;
+        // --- Döküm Sonu ---
+
         html += `<div class="table-scroll"><table class="result-table"><thead><tr><th>Alternatif</th>`;
-        criteriaNames.forEach((cn, j) => { html += `<th>${esc(cn)} <small>(w=${fucomResult.finalWeights[j].toFixed(3)})</small></th>`; });
+        criteriaNames.forEach((cn, j) => { html += `<th>${esc(cn)} <br><small>(w=${fucomResult.finalWeights[j].toFixed(3)})</small></th>`; });
         html += `</tr></thead><tbody>`;
         marcosResult.weightedMatrix.forEach((row, i) => {
             html += `<tr><td>${esc(altNames[i])}</td>`;
@@ -841,7 +963,6 @@
         // Collapsible expert blok toggle işlevi
         bindStepToggles();
     }
-
     /** Expert blokları ve collapsible bölümleri açma/kapama işlevi. */
     function bindStepToggles() {
         document.querySelectorAll('[data-expert-toggle] .expert-block-header').forEach(header => {
@@ -870,12 +991,56 @@
      * Adım Adım Hesaplama Raporunu PDF olarak dışa aktarır.
      * Tarayıcının print diyaloğunu kullanır; "PDF olarak kaydet" seçeneğiyle PDF üretilir.
      */
+/**
+     * Adım Adım Hesaplama Raporunu ve Sonuçları PDF olarak dışa aktarır.
+     * Tarayıcının print diyaloğunu kullanır; "PDF olarak kaydet" seçeneğiyle PDF üretilir.
+     */
     function exportStepsPDF() {
         const container = document.getElementById('stepsContainer');
         if (!container || container.innerHTML.trim() === '' || container.querySelector('.card[style*="text-align: center"]')) {
             showToast('Önce "Raporu Yenile / Oluştur" veya hesaplama yapın!', 'error');
             return;
         }
+
+        // --- YENİ EKLENEN: Sonuçlar Sekmesini Klonla ve Grafikleri Resme Çevir ---
+        const resultsTab = document.getElementById('tab-results');
+        const resultsClone = resultsTab.cloneNode(true);
+
+        // PDF'te görünmesini istemediğimiz butonları ve ana başlığı temizle
+        const actions = resultsClone.querySelector('.panel-actions');
+        if (actions) actions.remove();
+        const header = resultsClone.querySelector('.panel-header');
+        if (header) header.remove();
+
+        // Orijinal ekrandaki grafikleri (canvas) bul
+        const originalCanvases = resultsTab.querySelectorAll('canvas');
+        const clonedCanvases = resultsClone.querySelectorAll('canvas');
+
+        // Her bir grafiği resme (PNG) dönüştürüp klonun içine yerleştir
+        originalCanvases.forEach((canvas, index) => {
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/png'); // Grafiğin anlık resmini çek
+            img.style.width = '100%';
+            img.style.maxHeight = '320px';
+            img.style.objectFit = 'contain';
+            img.style.marginTop = '10px';
+            
+            // Canvas'ı silip yerine resmini koy
+            clonedCanvases[index].parentNode.replaceChild(img, clonedCanvases[index]);
+        });
+
+        // Raporun sonuna eklenecek Sonuçlar bölümünün HTML taslağı
+        const resultsHTML = `
+            <div style="page-break-before: always;"></div> <div class="pdf-header">
+                <div class="pdf-logo" style="background: linear-gradient(135deg, #16a34a, #15803d);">R</div>
+                <div>
+                    <h1>Nihai Analiz Sonuçları ve Grafikler</h1>
+                    <p>FUCOM ve MARCOS Algoritmalarının Özet Çıktıları</p>
+                </div>
+            </div>
+            ${resultsClone.innerHTML}
+        `;
+        // ---------------------------------------------------------------------
 
         const reportDate = new Date().toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
         const title = 'MCDM Tez – Adım Adım Hesaplama Raporu';
@@ -909,13 +1074,16 @@
             }
             .pdf-header h1 { font-size: 16px; margin: 0 0 3px; color: #1e293b; }
             .pdf-header p  { font-size: 10px; margin: 0; color: #64748b; }
-            .step-section {
+            .step-section, .card {
                 background: #f8fafc;
                 border: 1px solid #e2e8f0;
                 border-radius: 10px;
                 margin-bottom: 18px;
                 page-break-inside: avoid;
             }
+            .card { padding: 15px; background: white; }
+            .card h3 { font-size: 14px; margin-top: 0; margin-bottom: 12px; color: #3730a3; }
+            .card h4 { font-size: 12px; margin-bottom: 8px; color: #475569; }
             .step-section-header {
                 display: flex;
                 align-items: center;
@@ -1069,6 +1237,16 @@
                 margin-top: 20px;
                 padding-top: 8px;
             }
+
+            /* --- Yazdırma Kuralları Düzeltmeleri --- */
+            .collapsible-body {
+                max-height: none !important;
+                overflow: visible !important;
+                display: block !important; 
+                page-break-inside: auto;
+            }
+            .collapsible-header .coll-toggle { display: none !important; }
+            .toc-card { display: none; } /* PDF'te hızlı erişim menüsüne gerek yok */
         `;
 
         const win = window.open('', '_blank', 'width=900,height=700');
@@ -1094,6 +1272,9 @@
     </div>
   </div>
   ${container.innerHTML}
+  
+  ${resultsHTML}
+
   <div class="pdf-footer">
     © 2026 İhsan Turhan – MCDM Tez Veri Değerlendirme &nbsp;|&nbsp; Bu rapor uygulama tarafından otomatik olarak oluşturulmuştur.
   </div>
@@ -1102,13 +1283,13 @@
 
         win.document.close();
 
-        // Font yüklendikten sonra yazdır
+        // Resimlerin ve fontların tam yüklenmesi için süreyi biraz uzattık (600ms -> 800ms)
         win.onload = function () {
             setTimeout(() => {
                 win.focus();
                 win.print();
                 win.close();
-            }, 600);
+            }, 800);
         };
 
         showToast('PDF diyaloğu açılıyor... "PDF olarak kaydet" seçin ✓');
@@ -1473,3 +1654,33 @@
     // ── Uygulama Başlatma ──
     document.addEventListener('DOMContentLoaded', init);
 })();
+
+
+
+// Kriter listesini select kutusuna doldur
+function updateSensitivitySelect() {
+    const select = document.getElementById('selectSensitivityCriteria');
+    select.innerHTML = '';
+    state.criteria.forEach((c, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = c.name || `Kriter ${idx + 1}`;
+        select.appendChild(opt);
+    });
+}
+
+// Buton tıklandığında analizi çalıştır
+document.getElementById('btnRunSensitivity').addEventListener('click', () => {
+    const targetIdx = parseInt(document.getElementById('selectSensitivityCriteria').value);
+    
+    // Uygulama state'inden verileri al
+    const results = SensitivityManager.runFullAnalysis({
+        weights: state.results.fucom.finalWeights,
+        matrix: state.results.marcos.combinedMatrix,
+        types: state.criteria.map(c => c.type),
+        targetIdx: targetIdx
+    });
+
+    // PDF Raporunu Yazdır (Daha önce hazırladığımız fonksiyonu çağırın)
+    exportSensitivityToPDF(results); 
+});
