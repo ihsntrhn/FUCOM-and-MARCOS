@@ -8,6 +8,8 @@ const Visualization = (() => {
 
     let fucomChart = null;  // FUCOM ağırlık grafiği referansı
     let marcosChart = null; // MARCOS sıralama grafiği referansı
+    let dfcChart = null;      // YENİ: DFC Grafiği
+    let utilityChart = null;  // YENİ: K+ ve K- Grafiği
 
     // Kriter ağırlıkları için renk paleti (mor tonları)
     const COLORS = [
@@ -28,15 +30,12 @@ const Visualization = (() => {
     function destroyCharts() {
         if (fucomChart) { fucomChart.destroy(); fucomChart = null; }
         if (marcosChart) { marcosChart.destroy(); marcosChart = null; }
+        if (dfcChart) { dfcChart.destroy(); dfcChart = null; }
+        if (utilityChart) { utilityChart.destroy(); utilityChart = null; }
     }
 
     /**
      * FUCOM birleştirilmiş kriter ağırlıklarını dikey çubuk grafiği olarak gösterir.
-     * Y ekseni yüzde (%), X ekseni kriter isimleri.
-     *
-     * @param {string[]}   criteriaNames — Kriter isimleri
-     * @param {number[]}   finalWeights  — Birleştirilmiş ağırlıklar
-     * @param {number[][]} expertWeights — Her uzmanın ağırlıkları (ileride kullanılabilir)
      */
     function renderFucomChart(criteriaNames, finalWeights, expertWeights) {
         const ctx = document.getElementById('chartFucomWeights');
@@ -99,11 +98,6 @@ const Visualization = (() => {
 
     /**
      * MARCOS f(K_i) skorlarını yatay çubuk grafiği olarak gösterir.
-     * Alternatifler sıralamasına göre (1. sıra en üstte) düzenlenir.
-     *
-     * @param {string[]} alternativeNames — Alternatif isimleri
-     * @param {number[]} fK              — Her alternatifin f(K_i) skoru
-     * @param {number[]} ranks           — Her alternatifin sıralama numarası
      */
     function renderMarcosChart(alternativeNames, fK, ranks) {
         const ctx = document.getElementById('chartMarcosRanking');
@@ -135,9 +129,7 @@ const Visualization = (() => {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     tooltip: {
                         backgroundColor: '#ffffff',
                         titleColor: '#1a1d2e',
@@ -160,5 +152,91 @@ const Visualization = (() => {
         });
     }
 
-    return { renderFucomChart, renderMarcosChart, destroyCharts };
+    /**
+     * YENİ: DFC Tutarlılık Sapması Grafiği
+     */
+    function renderDFCChart(expertNames, dfcValues) {
+        const ctx = document.getElementById('chartFucomDFC');
+        if (!ctx) return;
+        if (dfcChart) dfcChart.destroy();
+
+        // 0.01 eşik değerini aşanları kırmızı, aşmayanları yeşil yapalım
+        const bgColors = dfcValues.map(val => val < 0.01 ? 'rgba(22, 163, 74, 0.7)' : 'rgba(220, 38, 38, 0.7)');
+        const borderColors = dfcValues.map(val => val < 0.01 ? '#16a34a' : '#dc2626');
+
+        dfcChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: expertNames,
+                datasets: [{
+                    label: 'DFC Değeri',
+                    data: dfcValues.map(v => +v.toFixed(4)),
+                    backgroundColor: bgColors,
+                    borderColor: borderColors,
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Uzmanların Tutarlılık Sapması (DFC < 0.01 Olmalı)', color: '#4b5068' }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * YENİ: MARCOS K+ ve K- İdeal/Anti-İdeal Karşılaştırma Grafiği
+     */
+    function renderMarcosUtilityChart(altNames, kPlus, kMinus) {
+        const ctx = document.getElementById('chartMarcosUtility');
+        if (!ctx) return;
+        if (utilityChart) utilityChart.destroy();
+
+        utilityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: altNames,
+                datasets: [
+                    {
+                        label: 'K+ (İdeale Göre Fayda)',
+                        data: kPlus.map(v => +v.toFixed(4)),
+                        backgroundColor: 'rgba(22, 163, 74, 0.7)',
+                        borderColor: '#16a34a',
+                        borderWidth: 2,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'K- (Anti-İdeale Göre Fayda)',
+                        data: kMinus.map(v => +v.toFixed(4)),
+                        backgroundColor: 'rgba(220, 38, 38, 0.7)',
+                        borderColor: '#dc2626',
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Alternatiflerin İdeal (K+) ve Anti-İdeal (K-) Fayda Dereceleri', color: '#4b5068' }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }
+                }
+            }
+        });
+    }
+
+    return { renderFucomChart, renderMarcosChart, renderDFCChart, renderMarcosUtilityChart, destroyCharts };
 })();
